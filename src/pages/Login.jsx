@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ─── Hardcoded credentials ───────────────────────────────────────────────────
-const VALID_EMAIL    = 'admin@rankify.com';
-const VALID_PASSWORD = '123456';
+const VALID_EMAIL    = 'muhammadasifnawazkhanniazi@rankify.com';
+const VALID_PASSWORD = 'TheBoss123!@%$';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function Login() {

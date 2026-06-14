@@ -43,6 +43,8 @@ const DEFAULT_INVOICE = {
   dueDate: '',
   currency: '',
   paymentTerms: '',
+  discount: '',
+  notes: '',
 };
 
 // Absolute pixel positions for text overlays on the design canvas (794x1123)
@@ -122,18 +124,20 @@ const AbsText = ({ config, value, devMode }) => {
         left: `${scaledX}px`,
         top: `${scaledY-2}px`,
         width: `${scaledW}px`,
-        height: `${textBoxHeight}px`,
+        height: config.wrap ? 'auto' : `${textBoxHeight}px`,
+        maxHeight: config.maxLines ? `${Math.round(config.lineHeight * SCALE.y * config.maxLines)}px` : 'none',
         fontSize: `${scaledFontSize}px`,
         fontWeight: config.fontWeight,
         color: config.color,
         textAlign: config.align || 'left',
         textTransform: config.uppercase ? 'uppercase' : 'none',
-        whiteSpace: 'nowrap',
+        whiteSpace: config.wrap ? 'pre-wrap' : 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        lineHeight: `${scaledFontSize}px`,
+        lineHeight: config.lineHeight ? `${Math.round(config.lineHeight * SCALE.y)}px` : `${scaledFontSize}px`,
         fontFamily: 'Arial, Helvetica, sans-serif',
         transform: 'translateY(-2px)',
+        textIndent: config.textIndent ? `${Math.round(config.textIndent * SCALE.x)}px` : '0',
         border: devMode ? '1px dashed red' : 'none',
         backgroundColor: devMode ? 'rgba(255,0,0,0.08)' : 'transparent',
         zIndex: 2,
@@ -144,15 +148,69 @@ const AbsText = ({ config, value, devMode }) => {
   );
 };
 
+const AddItemModal = ({ isOpen, onClose, onAdd }) => {
+  const [item, setItem] = useState({ description: '', qty: '', rate: '', amount: '' });
+
+  // Auto calculate amount when qty and rate change
+  useEffect(() => {
+    const q = parseFloat(item.qty);
+    const r = parseFloat(item.rate);
+    if (!isNaN(q) && !isNaN(r)) {
+      setItem(prev => ({ ...prev, amount: (q * r).toFixed(2) }));
+    }
+  }, [item.qty, item.rate]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-96 shadow-xl">
+        <h3 className="text-lg font-bold text-[#0a1f44] mb-4">Add Item</h3>
+        <InputGroup label="Description of Service" field="description" value={item.description} onChange={(f, v) => setItem({...item, [f]: v})} />
+        <div className="flex gap-4">
+          <div className="flex-1">
+             <InputGroup label="Qty" field="qty" type="number" value={item.qty} onChange={(f, v) => setItem({...item, [f]: v})} />
+          </div>
+          <div className="flex-1">
+             <InputGroup label="Rate" field="rate" type="number" value={item.rate} onChange={(f, v) => setItem({...item, [f]: v})} />
+          </div>
+        </div>
+        <InputGroup label="Amount" field="amount" value={item.amount} onChange={(f, v) => setItem({...item, [f]: v})} />
+
+        <div className="flex justify-end gap-2 mt-4">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+          <button
+            onClick={() => {
+              onAdd(item);
+              setItem({ description: '', qty: '', rate: '', amount: '' });
+              onClose();
+            }}
+            className="px-4 py-2 text-sm bg-[#0a1f44] text-white rounded hover:bg-[#081a38]"
+          >
+            Add Row
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function GenerateInvoicePage() {
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [invoice, setInvoice] = useState(DEFAULT_INVOICE);
+  const [items, setItems] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [devMode, setDevMode] = useState(false);
   const [fitPreview, setFitPreview] = useState(true);
   const [previewScale, setPreviewScale] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
   const previewWrapRef = useRef(null);
   const captureRef = useRef(null);
+
+  const subTotal = items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  const discountPercent = parseFloat(invoice.discount) || 0;
+  const discountVal = subTotal * (discountPercent / 100);
+  const total = Math.max(0, subTotal - discountVal);
 
   useEffect(() => {
     const saved = localStorage.getItem(PROFILE_KEY);
@@ -164,6 +222,16 @@ export default function GenerateInvoicePage() {
         console.error('Failed to parse invoice_profile', error);
       }
     }
+
+    // Fetch unique invoice number on load
+    fetch('/api/invoice-number')
+      .then(res => res.json())
+      .then(data => {
+        if (data.invoiceNo) {
+          setInvoice(prev => ({ ...prev, invoiceNo: data.invoiceNo }));
+        }
+      })
+      .catch(err => console.error('Failed to fetch invoice number', err));
   }, []);
 
   useEffect(() => {
@@ -198,6 +266,15 @@ export default function GenerateInvoicePage() {
 
     setIsDownloading(true);
     try {
+      // Save invoice number to backend to prevent duplicates
+      if (invoice.invoiceNo) {
+        await fetch('/api/save-invoice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invoiceNo: invoice.invoiceNo })
+        }).catch(err => console.error('Failed to save invoice number', err));
+      }
+
       if (document.fonts?.ready) {
         await document.fonts.ready;
       }
@@ -281,6 +358,56 @@ export default function GenerateInvoicePage() {
           {/* Footer values */}
           <AbsText config={OVERLAYS.footerName} value={profile.footerName} devMode={showDevMode} />
           <AbsText config={OVERLAYS.footerNTN} value={profile.footerNTN} devMode={showDevMode} />
+
+          {/* Invoice Items */}
+          {items.map((item, idx) => {
+            // Adjust the base Y position and spacing if necessary
+            const yPos = 495 + (idx * 30);
+            return (
+              <div key={idx}>
+                <AbsText config={{ x: 40, y: yPos, w: 50, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={idx + 1} devMode={showDevMode} />
+                <AbsText config={{ x: 100, y: yPos, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937' }} value={item.description} devMode={showDevMode} />
+                <AbsText config={{ x: 440, y: yPos, w: 60, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'left' }} value={item.qty} devMode={showDevMode} />
+                <AbsText config={{ x: 540, y: yPos, w: 80, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'left' }} value={item.rate} devMode={showDevMode} />
+                <AbsText config={{ x: 640, y: yPos, w: 100, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'left' }} value={item.amount} devMode={showDevMode} />
+                {/* Horizontal row separator */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${Math.round(48 * SCALE.x)}px`,
+                    top: `${Math.round((yPos + 22) * SCALE.y)}px`,
+                    width: `${Math.round(700 * SCALE.x)}px`,
+                    borderBottom: '1px solid #9ca3af',
+                    zIndex: 2,
+                  }}
+                />
+              </div>
+            );
+          })}
+
+          {/* Totals */}
+          <AbsText config={{ x: 630, y: 712, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={subTotal.toFixed(2)} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 745, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={discountVal > 0 ? `-${discountVal.toFixed(2)}` : '0.00'} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 778, w: 100, fontSize: 14, fontWeight: 900, color: '#ffffff', align: 'left' }} value={total.toFixed(2)} devMode={showDevMode} />
+
+          {/* Notes */}
+          <AbsText
+            config={{
+              x: 44,
+              y: 688,
+              w: 315,
+              fontSize: 12,
+              fontWeight: 500,
+              color: '#1f2937',
+              wrap: true,
+              lineHeight: 36,
+              align: 'left',
+              textIndent: 60,
+              maxLines: 2
+            }}
+            value={invoice.notes}
+            devMode={showDevMode}
+          />
         </div>
       </div>
     );
@@ -371,6 +498,95 @@ export default function GenerateInvoicePage() {
             <InputGroup label="Due Date" field="dueDate" value={invoice.dueDate} onChange={handleChange} type="date" />
             <InputGroup label="Currency" field="currency" value={invoice.currency} onChange={handleChange} />
             <InputGroup label="Payment Terms" field="paymentTerms" value={invoice.paymentTerms} onChange={handleChange} />
+
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Notes (Max 110 chars)</label>
+              <textarea
+                value={invoice.notes ?? ''}
+                maxLength={110}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val.length <= 110) {
+                    handleChange('notes', val);
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:border-[#0a1f44] focus:outline-none focus:ring-1 focus:ring-[#0a1f44] min-h-[80px]"
+                placeholder="Enter any additional notes..."
+              />
+              <div className="flex justify-between mt-1">
+                <span className="text-[10px] text-gray-400">
+                  {invoice.notes?.length || 0} / 110 chars
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <div className="flex justify-between items-center border-b pb-2 mb-4">
+              <h3 className="text-sm font-bold text-gray-800">Invoice Items</h3>
+              {items.length < 6 && (
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
+                  className="text-xs bg-[#0a1f44] text-white px-3 py-1 rounded hover:bg-[#081a38]"
+                >
+                  + Add Row
+                </button>
+              )}
+            </div>
+
+            {items.length === 0 ? (
+              <p className="text-xs text-gray-500 italic mb-4">No items added yet. Max 6 rows allowed.</p>
+            ) : (
+              <div className="space-y-3 mb-4">
+                {items.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-200">
+                    <div className="text-xs overflow-hidden">
+                      <p className="font-semibold text-gray-800 truncate">{item.description}</p>
+                      <p className="text-gray-500 mt-0.5">
+                        {item.qty} x {item.rate} = <span className="font-medium text-gray-700">{item.amount}</span>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setItems(items.filter((_, i) => i !== idx))}
+                      className="text-red-500 hover:text-red-700 p-1"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {items.length >= 6 && (
+              <p className="text-xs text-amber-600 mb-4">Maximum of 6 rows reached.</p>
+            )}
+
+            <div className="mt-4 border-t pt-4">
+              <div className="flex justify-end items-center gap-4 text-sm mb-2">
+                <span className="font-semibold text-gray-600">Sub Total:</span>
+                <span className="w-24 text-right font-medium text-gray-800">{subTotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-end items-center gap-4 text-sm mb-2">
+                <span className="font-semibold text-gray-600">Discount (%):</span>
+                <div className="w-24 relative">
+                  <input
+                    type="number"
+                    value={invoice.discount ?? ''}
+                    onChange={(e) => handleChange('discount', e.target.value)}
+                    className="w-full pl-2 pr-6 py-1 border border-gray-300 rounded text-right focus:border-[#0a1f44] focus:outline-none focus:ring-1 focus:ring-[#0a1f44]"
+                    placeholder="0"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+                </div>
+              </div>
+              <div className="flex justify-end items-center gap-4 text-base font-bold mt-3">
+                <span className="text-[#0a1f44]">Total:</span>
+                <span className="w-24 text-right text-[#0a1f44]">{total.toFixed(2)}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -397,6 +613,12 @@ export default function GenerateInvoicePage() {
       >
         <PreviewCanvas scale={1} innerRef={captureRef} showDevMode={false} withShadow={false} />
       </div>
+
+      <AddItemModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={(item) => setItems([...items, item])}
+      />
     </div>
   );
 }

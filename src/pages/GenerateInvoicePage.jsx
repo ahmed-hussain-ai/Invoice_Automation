@@ -51,8 +51,8 @@ const DEFAULT_INVOICE = {
 const OVERLAYS = {
   headerPhone:        { x: 580, y: 40,  w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
   headerEmail:        { x: 580, y: 75,  w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  headerWebsite:      { x: 580, y: 110, w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  headerLocation:     { x: 580, y: 145, w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  headerWebsite:      { x: 580, y: 108, w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  headerLocation:     { x: 580, y: 134, w: 200, fontSize: 13, fontWeight: 500, color: '#1f2937', wrap: true, maxLines: 2, lineHeight: 18 },
 
 //   billClientName:     { x: 120, y: 287, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
 //   billCompanyName:    { x: 139, y: 308, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
@@ -83,8 +83,8 @@ const OVERLAYS = {
   paymentSwift:       { x: 160, y: 864, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
   paymentMethod:      { x: 160, y: 882, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
 
-  footerName:         { x: 210, y: 1060, w: 150, fontSize: 13, fontWeight: 900, color: '#0a1f44', align: 'center', uppercase: true },
-  footerNTN:          { x: 405, y: 1060, w: 110, fontSize: 13, fontWeight: 700, color: '#1f2937', align: 'center' },
+  footerName:         { x: 185, y: 1060, w: 200, fontSize: 12, fontWeight: 900, color: '#0a1f44', align: 'center', uppercase: true },
+  footerNTN:          { x: 405, y: 1055, w: 120, fontSize: 15, fontWeight: 700, color: '#1f2937', align: 'center' },
 };
 
 const InputGroup = ({ label, field, value, onChange, type = 'text', placeholder }) => (
@@ -124,16 +124,16 @@ const AbsText = ({ config, value, devMode }) => {
         left: `${scaledX}px`,
         top: `${scaledY-2}px`,
         width: `${scaledW}px`,
-        height: config.wrap ? 'auto' : `${textBoxHeight}px`,
-        maxHeight: config.maxLines ? `${Math.round(config.lineHeight * SCALE.y * config.maxLines)}px` : 'none',
+        height: config.wrap ? (config.maxLines ? `${Math.ceil(config.lineHeight * SCALE.y * config.maxLines) + 20}px` : 'auto') : `${textBoxHeight}px`,
         fontSize: `${scaledFontSize}px`,
         fontWeight: config.fontWeight,
         color: config.color,
         textAlign: config.align || 'left',
         textTransform: config.uppercase ? 'uppercase' : 'none',
         whiteSpace: config.wrap ? 'pre-wrap' : 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
+        overflow: config.wrap ? 'visible' : 'hidden',
+        textOverflow: config.wrap ? 'clip' : 'ellipsis',
+        display: 'block',
         lineHeight: config.lineHeight ? `${Math.round(config.lineHeight * SCALE.y)}px` : `${scaledFontSize}px`,
         fontFamily: 'Arial, Helvetica, sans-serif',
         transform: 'translateY(-2px)',
@@ -148,8 +148,19 @@ const AbsText = ({ config, value, devMode }) => {
   );
 };
 
-const AddItemModal = ({ isOpen, onClose, onAdd }) => {
+const AddItemModal = ({ isOpen, onClose, onAdd, initialItem = null }) => {
   const [item, setItem] = useState({ description: '', qty: '', rate: '', amount: '' });
+
+  // Update internal state when modal opens or initialItem changes
+  useEffect(() => {
+    if (isOpen) {
+      if (initialItem) {
+        setItem(initialItem);
+      } else {
+        setItem({ description: '', qty: '', rate: '', amount: '' });
+      }
+    }
+  }, [isOpen, initialItem]);
 
   // Auto calculate amount when qty and rate change
   useEffect(() => {
@@ -165,7 +176,7 @@ const AddItemModal = ({ isOpen, onClose, onAdd }) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-96 shadow-xl">
-        <h3 className="text-lg font-bold text-[#0a1f44] mb-4">Add Item</h3>
+        <h3 className="text-lg font-bold text-[#0a1f44] mb-4">{initialItem ? 'Edit Item' : 'Add Item'}</h3>
         <InputGroup label="Description of Service" field="description" value={item.description} onChange={(f, v) => setItem({...item, [f]: v})} />
         <div className="flex gap-4">
           <div className="flex-1">
@@ -182,12 +193,11 @@ const AddItemModal = ({ isOpen, onClose, onAdd }) => {
           <button
             onClick={() => {
               onAdd(item);
-              setItem({ description: '', qty: '', rate: '', amount: '' });
               onClose();
             }}
             className="px-4 py-2 text-sm bg-[#0a1f44] text-white rounded hover:bg-[#081a38]"
           >
-            Add Row
+            {initialItem ? 'Save Changes' : 'Add Row'}
           </button>
         </div>
       </div>
@@ -200,6 +210,7 @@ export default function GenerateInvoicePage() {
   const [invoice, setInvoice] = useState(DEFAULT_INVOICE);
   const [items, setItems] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
   const [devMode, setDevMode] = useState(false);
   const [fitPreview, setFitPreview] = useState(true);
   const [previewScale, setPreviewScale] = useState(1);
@@ -286,14 +297,15 @@ export default function GenerateInvoicePage() {
         letterRendering: true,
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.8);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'px',
         format: [CANVAS.W, CANVAS.H],
+        compress: true,
       });
 
-      pdf.addImage(imgData, 'PNG', 0, 0, CANVAS.W, CANVAS.H);
+      pdf.addImage(imgData, 'JPEG', 0, 0, CANVAS.W, CANVAS.H);
       pdf.save('invoice.pdf');
     } catch (error) {
       console.error('Failed to download PDF', error);
@@ -362,22 +374,37 @@ export default function GenerateInvoicePage() {
           {/* Invoice Items */}
           {items.map((item, idx) => {
             // Adjust the base Y position and spacing if necessary
-            const yPos = 495 + (idx * 30);
+            const yPos = 485 + (idx * 30);
             return (
               <div key={idx}>
-                <AbsText config={{ x: 40, y: yPos, w: 50, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={idx + 1} devMode={showDevMode} />
-                <AbsText config={{ x: 100, y: yPos, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937' }} value={item.description} devMode={showDevMode} />
-                <AbsText config={{ x: 440, y: yPos, w: 60, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'left' }} value={item.qty} devMode={showDevMode} />
-                <AbsText config={{ x: 540, y: yPos, w: 80, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'left' }} value={item.rate} devMode={showDevMode} />
-                <AbsText config={{ x: 640, y: yPos, w: 100, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'left' }} value={item.amount} devMode={showDevMode} />
+                <AbsText config={{ x: 40, y: yPos - 2, w: 50, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={idx + 1} devMode={showDevMode} />
+                <AbsText config={{ x: 160, y: yPos - 2, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937' }} value={item.description} devMode={showDevMode} />
+                <AbsText config={{ x: 430, y: yPos - 2, w: 60, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.qty} devMode={showDevMode} />
+                <AbsText config={{ x: 522, y: yPos - 2, w: 80, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.rate} devMode={showDevMode} />
+                <AbsText config={{ x: 630, y: yPos - 2, w: 100, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.amount} devMode={showDevMode} />
+
+                {/* Horizontal row separator */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${Math.round(48 * SCALE.x)}px`,
+                    top: `${Math.round((yPos + 18) * SCALE.y)}px`,
+                    width: `${Math.round(700 * SCALE.x)}px`,
+                    borderBottom: '1px solid #9ca3af',
+                    zIndex: 2,
+                  }}
+                />
               </div>
             );
           })}
 
           {/* Totals */}
-          <AbsText config={{ x: 630, y: 712, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={subTotal.toFixed(2)} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 707, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={subTotal.toFixed(2)} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 740, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={discountVal > 0 ? `-${discountVal.toFixed(2)}` : '0.00'} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 773, w: 100, fontSize: 15, fontWeight: 900, color: '#ffffff', align: 'left' }} value={total.toFixed(2)} devMode={showDevMode} />
+          {/* <AbsText config={{ x: 630, y: 712, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={subTotal.toFixed(2)} devMode={showDevMode} />
           <AbsText config={{ x: 630, y: 745, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={discountVal > 0 ? `-${discountVal.toFixed(2)}` : '0.00'} devMode={showDevMode} />
-          <AbsText config={{ x: 630, y: 778, w: 100, fontSize: 14, fontWeight: 900, color: '#ffffff', align: 'left' }} value={total.toFixed(2)} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 778, w: 100, fontSize: 14, fontWeight: 900, color: '#ffffff', align: 'left' }} value={total.toFixed(2)} devMode={showDevMode} /> */}
 
           {/* Notes */}
           <AbsText
@@ -516,7 +543,10 @@ export default function GenerateInvoicePage() {
               {items.length < 6 && (
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => {
+                    setEditingIndex(null);
+                    setIsModalOpen(true);
+                  }}
                   className="text-xs bg-[#0a1f44] text-white px-3 py-1 rounded hover:bg-[#081a38]"
                 >
                   + Add Row
@@ -536,15 +566,32 @@ export default function GenerateInvoicePage() {
                         {item.qty} x {item.rate} = <span className="font-medium text-gray-700">{item.amount}</span>
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setItems(items.filter((_, i) => i !== idx))}
-                      className="text-red-500 hover:text-red-700 p-1"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingIndex(idx);
+                          setIsModalOpen(true);
+                        }}
+                        className="text-blue-500 hover:text-blue-700 p-1"
+                        title="Edit Item"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.14l-2.81.936a.75.75 0 01-.955-.955l.936-2.81a4.5 4.5 0 011.14-1.89l13.609-13.61z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 7.125L16.875 4.5" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setItems(items.filter((_, i) => i !== idx))}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Delete Item"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -605,8 +652,20 @@ export default function GenerateInvoicePage() {
 
       <AddItemModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAdd={(item) => setItems([...items, item])}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingIndex(null);
+        }}
+        initialItem={editingIndex !== null ? items[editingIndex] : null}
+        onAdd={(item) => {
+          if (editingIndex !== null) {
+            const newItems = [...items];
+            newItems[editingIndex] = item;
+            setItems(newItems);
+          } else {
+            setItems([...items, item]);
+          }
+        }}
       />
     </div>
   );

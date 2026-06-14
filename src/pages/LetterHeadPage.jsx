@@ -17,10 +17,10 @@ const SCALE = {
 const OVERLAYS = {
   phone:      { x: 580, y: 40,   w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
   email:      { x: 580, y: 75,   w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  website:    { x: 580, y: 110,  w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  location:   { x: 580, y: 145,  w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  footerName: { x: 210, y: 1060, w: 150, fontSize: 13, fontWeight: 900, color: '#0a1f44', align: 'center', uppercase: true },
-  footerNTN:  { x: 405, y: 1060, w: 120,  fontSize: 13, fontWeight: 700, color: '#1f2937', align: 'center' },
+  website:    { x: 580, y: 108,  w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  location:   { x: 580, y: 134,  w: 200, fontSize: 13, fontWeight: 500, color: '#1f2937', wrap: true, maxLines: 2, lineHeight: 18 },
+  footerName: { x: 185, y: 1060, w: 200, fontSize: 12, fontWeight: 900, color: '#0a1f44', align: 'center', uppercase: true },
+  footerNTN:  { x: 405, y: 1055, w: 120,  fontSize: 15, fontWeight: 700, color: '#1f2937', align: 'center' },
 };
 
 const InputGroup = ({ label, field, value, onChange }) => (
@@ -86,7 +86,6 @@ const AbsText = ({ config, value, devMode }) => {
   const scaledW = Math.round(config.w * SCALE.x);
   const scaledFontSize = Math.round(config.fontSize * SCALE.y);
 
-  // Height is a little taller to prevent cropping, as before
   const textBoxHeight = Math.ceil(scaledFontSize * 1.5);
 
   return (
@@ -94,25 +93,24 @@ const AbsText = ({ config, value, devMode }) => {
       style={{
         position: 'absolute',
         left: `${scaledX}px`,
-        top: `${scaledY}px`,
+        top: `${scaledY-2}px`,
         width: `${scaledW}px`,
-        height: `${textBoxHeight}px`,
+        height: config.wrap ? (config.maxLines ? `${Math.ceil(config.lineHeight * SCALE.y * config.maxLines) + 20}px` : 'auto') : `${textBoxHeight}px`,
         fontSize: `${scaledFontSize}px`,
         fontWeight: config.fontWeight,
         color: config.color,
         textAlign: config.align || 'left',
         textTransform: config.uppercase ? 'uppercase' : 'none',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        lineHeight: `${scaledFontSize}px`, // keep baseline at top
+        whiteSpace: config.wrap ? 'pre-wrap' : 'nowrap',
+        overflow: config.wrap ? 'visible' : 'hidden',
+        textOverflow: config.wrap ? 'clip' : 'ellipsis',
+        display: 'block',
+        lineHeight: config.lineHeight ? `${Math.round(config.lineHeight * SCALE.y)}px` : `${scaledFontSize}px`,
         fontFamily: 'Arial, Helvetica, sans-serif',
-
-        // Nudge text up by 2px to compensate for the taller box
         transform: 'translateY(-2px)',
-
+        textIndent: config.textIndent ? `${Math.round(config.textIndent * SCALE.x)}px` : '0',
         border: devMode ? '1px dashed red' : 'none',
-        backgroundColor: devMode ? 'rgba(255,0,0,0.1)' : 'transparent',
+        backgroundColor: devMode ? 'rgba(255,0,0,0.08)' : 'transparent',
         zIndex: 2,
       }}
     >
@@ -198,14 +196,15 @@ export default function LetterHeadPage() {
         letterRendering: true,
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
         const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'px',
         format: [CANVAS.W, CANVAS.H],
+        compress: true,
         });
 
-        pdf.addImage(imgData, 'PNG', 0, 0, CANVAS.W, CANVAS.H);
+        pdf.addImage(imgData, 'JPEG', 0, 0, CANVAS.W, CANVAS.H);
         pdf.save('letterhead.pdf');
     } catch (error) {
         console.error('Failed to download PDF', error);
