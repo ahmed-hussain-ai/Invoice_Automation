@@ -164,6 +164,10 @@ const AddItemModal = ({ isOpen, onClose, onAdd, initialItem = null }) => {
 
   // Auto calculate amount when qty and rate change
   useEffect(() => {
+    if (item.qty === '-' || item.rate === '-') {
+      return;
+    }
+
     const q = parseFloat(item.qty);
     const r = parseFloat(item.rate);
     if (!isNaN(q) && !isNaN(r)) {
@@ -180,10 +184,10 @@ const AddItemModal = ({ isOpen, onClose, onAdd, initialItem = null }) => {
         <InputGroup label="Description of Service" field="description" value={item.description} onChange={(f, v) => setItem({...item, [f]: v})} />
         <div className="flex gap-4">
           <div className="flex-1">
-             <InputGroup label="Qty" field="qty" type="number" value={item.qty} onChange={(f, v) => setItem({...item, [f]: v})} />
+             <InputGroup label="Qty" field="qty" type="text" value={item.qty} onChange={(f, v) => setItem({...item, [f]: v})} />
           </div>
           <div className="flex-1">
-             <InputGroup label="Rate" field="rate" type="number" value={item.rate} onChange={(f, v) => setItem({...item, [f]: v})} />
+             <InputGroup label="Rate" field="rate" type="text" value={item.rate} onChange={(f, v) => setItem({...item, [f]: v})} />
           </div>
         </div>
         <InputGroup label="Amount" field="amount" value={item.amount} onChange={(f, v) => setItem({...item, [f]: v})} />
@@ -318,6 +322,15 @@ export default function GenerateInvoicePage() {
   const scaledWidth = Math.round(CANVAS.W * effectiveScale);
   const scaledHeight = Math.round(CANVAS.H * effectiveScale);
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateStr;
+  };
+
   const PreviewCanvas = ({ scale, innerRef, showDevMode, withShadow = true }) => {
     const scaledW = Math.round(CANVAS.W * scale);
     const scaledH = Math.round(CANVAS.H * scale);
@@ -354,8 +367,8 @@ export default function GenerateInvoicePage() {
 
           {/* Invoice info values */}
           <AbsText config={OVERLAYS.invoiceNo} value={invoice.invoiceNo} devMode={showDevMode} />
-          <AbsText config={OVERLAYS.invoiceDate} value={invoice.invoiceDate} devMode={showDevMode} />
-          <AbsText config={OVERLAYS.dueDate} value={invoice.dueDate} devMode={showDevMode} />
+          <AbsText config={OVERLAYS.invoiceDate} value={formatDate(invoice.invoiceDate)} devMode={showDevMode} />
+          <AbsText config={OVERLAYS.dueDate} value={formatDate(invoice.dueDate)} devMode={showDevMode} />
           <AbsText config={OVERLAYS.currency} value={invoice.currency} devMode={showDevMode} />
           <AbsText config={OVERLAYS.paymentTerms} value={invoice.paymentTerms} devMode={showDevMode} />
 
@@ -379,9 +392,9 @@ export default function GenerateInvoicePage() {
               <div key={idx}>
                 <AbsText config={{ x: 40, y: yPos - 2, w: 50, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={idx + 1} devMode={showDevMode} />
                 <AbsText config={{ x: 160, y: yPos - 2, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937' }} value={item.description} devMode={showDevMode} />
-                <AbsText config={{ x: 430, y: yPos - 2, w: 60, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.qty} devMode={showDevMode} />
-                <AbsText config={{ x: 522, y: yPos - 2, w: 80, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.rate} devMode={showDevMode} />
-                <AbsText config={{ x: 630, y: yPos - 2, w: 100, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.amount} devMode={showDevMode} />
+                <AbsText config={{ x: 430, y: yPos - 2, w: 60, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.qty || '-'} devMode={showDevMode} />
+                <AbsText config={{ x: 522, y: yPos - 2, w: 80, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.rate || '-'} devMode={showDevMode} />
+                <AbsText config={{ x: 630, y: yPos - 2, w: 100, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.amount || '-'} devMode={showDevMode} />
 
                 {/* Horizontal row separator */}
                 <div
