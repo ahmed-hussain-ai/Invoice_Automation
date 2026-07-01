@@ -49,42 +49,42 @@ const DEFAULT_INVOICE = {
 
 // Absolute pixel positions for text overlays on the design canvas (794x1123)
 const OVERLAYS = {
-  headerPhone:        { x: 580, y: 40,  w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  headerEmail:        { x: 580, y: 75,  w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  headerWebsite:      { x: 580, y: 108, w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  headerLocation:     { x: 580, y: 134, w: 200, fontSize: 13, fontWeight: 500, color: '#1f2937', wrap: true, maxLines: 2, lineHeight: 18 },
+  headerPhone: { x: 580, y: 40, w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  headerEmail: { x: 580, y: 75, w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  headerWebsite: { x: 580, y: 108, w: 180, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  headerLocation: { x: 580, y: 134, w: 200, fontSize: 13, fontWeight: 500, color: '#1f2937', wrap: true, maxLines: 2, lineHeight: 18 },
 
-//   billClientName:     { x: 120, y: 287, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-//   billCompanyName:    { x: 139, y: 308, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-//   billAddress:        { x: 98, y: 329, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-//   billEmail:          { x: 85, y: 349, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-//   billPhone:          { x: 85, y: 368, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-//   billCompanyNumber:  { x: 150, y: 388, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-//   billVat:            { x: 75, y: 409, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  //   billClientName:     { x: 120, y: 287, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  //   billCompanyName:    { x: 139, y: 308, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  //   billAddress:        { x: 98, y: 329, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  //   billEmail:          { x: 85, y: 349, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  //   billPhone:          { x: 85, y: 368, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  //   billCompanyNumber:  { x: 150, y: 388, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  //   billVat:            { x: 75, y: 409, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
 
-  billClientName:     { x: 160, y: 287, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billCompanyName:    { x: 160, y: 308, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billAddress:        { x: 160, y: 329, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billEmail:          { x: 160, y: 349, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billPhone:          { x: 160, y: 368, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billCompanyNumber:  { x: 160, y: 388, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billVat:            { x: 160, y: 409, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billClientName: { x: 160, y: 287, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billCompanyName: { x: 160, y: 308, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billAddress: { x: 160, y: 329, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billEmail: { x: 160, y: 349, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billPhone: { x: 160, y: 368, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billCompanyNumber: { x: 160, y: 388, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billVat: { x: 160, y: 409, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
 
-  invoiceNo:          { x: 620, y: 303, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  invoiceDate:        { x: 620, y: 328, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  dueDate:            { x: 620, y: 353, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  currency:           { x: 620, y: 378, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  paymentTerms:       { x: 620, y: 401, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  invoiceNo: { x: 620, y: 303, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  invoiceDate: { x: 620, y: 328, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  dueDate: { x: 620, y: 353, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  currency: { x: 620, y: 378, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  paymentTerms: { x: 620, y: 401, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
 
-  paymentAccountNo:   { x: 160, y: 795, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  paymentAccountTitle:{ x: 160, y: 813, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  paymentBankName:    { x: 160, y: 830, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  paymentIban:        { x: 160, y: 848, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  paymentSwift:       { x: 160, y: 864, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  paymentMethod:      { x: 160, y: 882, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  paymentAccountNo: { x: 160, y: 795, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  paymentAccountTitle: { x: 160, y: 813, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  paymentBankName: { x: 160, y: 830, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  paymentIban: { x: 160, y: 848, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  paymentSwift: { x: 160, y: 864, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  paymentMethod: { x: 160, y: 882, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
 
-  footerName:         { x: 185, y: 1060, w: 200, fontSize: 12, fontWeight: 900, color: '#0a1f44', align: 'center', uppercase: true },
-  footerNTN:          { x: 405, y: 1055, w: 120, fontSize: 15, fontWeight: 700, color: '#1f2937', align: 'center' },
+  footerName: { x: 185, y: 1060, w: 200, fontSize: 12, fontWeight: 900, color: '#0a1f44', align: 'center', uppercase: true },
+  footerNTN: { x: 405, y: 1055, w: 120, fontSize: 15, fontWeight: 700, color: '#1f2937', align: 'center' },
 };
 
 const InputGroup = ({ label, field, value, onChange, type = 'text', placeholder }) => (
@@ -122,7 +122,7 @@ const AbsText = ({ config, value, devMode }) => {
       style={{
         position: 'absolute',
         left: `${scaledX}px`,
-        top: `${scaledY-2}px`,
+        top: `${scaledY - 2}px`,
         width: `${scaledW}px`,
         height: config.wrap ? (config.maxLines ? `${Math.ceil(config.lineHeight * SCALE.y * config.maxLines) + 20}px` : 'auto') : `${textBoxHeight}px`,
         fontSize: `${scaledFontSize}px`,
@@ -181,16 +181,16 @@ const AddItemModal = ({ isOpen, onClose, onAdd, initialItem = null }) => {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-96 shadow-xl">
         <h3 className="text-lg font-bold text-[#0a1f44] mb-4">{initialItem ? 'Edit Item' : 'Add Item'}</h3>
-        <InputGroup label="Description of Service" field="description" value={item.description} onChange={(f, v) => setItem({...item, [f]: v})} />
+        <InputGroup label="Description of Service" field="description" value={item.description} onChange={(f, v) => setItem({ ...item, [f]: v })} />
         <div className="flex gap-4">
           <div className="flex-1">
-             <InputGroup label="Qty" field="qty" type="text" value={item.qty} onChange={(f, v) => setItem({...item, [f]: v})} />
+            <InputGroup label="Qty" field="qty" type="text" value={item.qty} onChange={(f, v) => setItem({ ...item, [f]: v })} />
           </div>
           <div className="flex-1">
-             <InputGroup label="Rate" field="rate" type="text" value={item.rate} onChange={(f, v) => setItem({...item, [f]: v})} />
+            <InputGroup label="Rate" field="rate" type="text" value={item.rate} onChange={(f, v) => setItem({ ...item, [f]: v })} />
           </div>
         </div>
-        <InputGroup label="Amount" field="amount" value={item.amount} onChange={(f, v) => setItem({...item, [f]: v})} />
+        <InputGroup label="Amount" field="amount" value={item.amount} onChange={(f, v) => setItem({ ...item, [f]: v })} />
 
         <div className="flex justify-end gap-2 mt-4">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
@@ -222,7 +222,11 @@ export default function GenerateInvoicePage() {
   const previewWrapRef = useRef(null);
   const captureRef = useRef(null);
 
-  const subTotal = items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  const subTotal = items.reduce((sum, item) => {
+    if (!item.amount || item.amount === '-') return sum;
+    const cleanStr = String(item.amount).replace(/[^\d.,-]/g, '').replace(',', '.');
+    return sum + (parseFloat(cleanStr) || 0);
+  }, 0);
   const discountPercent = parseFloat(invoice.discount) || 0;
   const discountVal = subTotal * (discountPercent / 100);
   const total = Math.max(0, subTotal - discountVal);
@@ -384,6 +388,7 @@ export default function GenerateInvoicePage() {
           <AbsText config={OVERLAYS.footerName} value={profile.footerName} devMode={showDevMode} />
           <AbsText config={OVERLAYS.footerNTN} value={profile.footerNTN} devMode={showDevMode} />
 
+
           {/* Invoice Items */}
           {items.map((item, idx) => {
             // Adjust the base Y position and spacing if necessary
@@ -412,9 +417,10 @@ export default function GenerateInvoicePage() {
           })}
 
           {/* Totals */}
-          <AbsText config={{ x: 630, y: 707, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={subTotal.toFixed(2)} devMode={showDevMode} />
-          <AbsText config={{ x: 630, y: 740, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={discountVal > 0 ? `-${discountVal.toFixed(2)}` : '0.00'} devMode={showDevMode} />
-          <AbsText config={{ x: 630, y: 773, w: 100, fontSize: 15, fontWeight: 900, color: '#ffffff', align: 'left' }} value={total.toFixed(2)} devMode={showDevMode} />
+
+          <AbsText config={{ x: 630, y: 707, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={`€${subTotal.toFixed(2)}`} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 740, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={discountVal > 0 ? `-€${discountVal.toFixed(2)}` : '€0.00'} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 773, w: 100, fontSize: 15, fontWeight: 900, color: '#ffffff', align: 'left' }} value={`€${total.toFixed(2)}`} devMode={showDevMode} />
           {/* <AbsText config={{ x: 630, y: 712, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={subTotal.toFixed(2)} devMode={showDevMode} />
           <AbsText config={{ x: 630, y: 745, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={discountVal > 0 ? `-${discountVal.toFixed(2)}` : '0.00'} devMode={showDevMode} />
           <AbsText config={{ x: 630, y: 778, w: 100, fontSize: 14, fontWeight: 900, color: '#ffffff', align: 'left' }} value={total.toFixed(2)} devMode={showDevMode} /> */}
@@ -474,11 +480,10 @@ export default function GenerateInvoicePage() {
               type="button"
               onClick={handleDownloadPdf}
               disabled={isDownloading}
-              className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
-                isDownloading
-                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  : 'bg-[#0a1f44] text-white hover:bg-[#081a38]'
-              }`}
+              className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors ${isDownloading
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-[#0a1f44] text-white hover:bg-[#081a38]'
+                }`}
             >
               {isDownloading ? 'Preparing...' : 'Download PDF'}
             </button>
@@ -616,7 +621,7 @@ export default function GenerateInvoicePage() {
             <div className="mt-4 border-t pt-4">
               <div className="flex justify-end items-center gap-4 text-sm mb-2">
                 <span className="font-semibold text-gray-600">Sub Total:</span>
-                <span className="w-24 text-right font-medium text-gray-800">{subTotal.toFixed(2)}</span>
+                <span className="w-24 text-right font-medium text-gray-800">€{subTotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-end items-center gap-4 text-sm mb-2">
                 <span className="font-semibold text-gray-600">Discount (%):</span>
@@ -633,7 +638,7 @@ export default function GenerateInvoicePage() {
               </div>
               <div className="flex justify-end items-center gap-4 text-base font-bold mt-3">
                 <span className="text-[#0a1f44]">Total:</span>
-                <span className="w-24 text-right text-[#0a1f44]">{total.toFixed(2)}</span>
+                <span className="w-24 text-right text-[#0a1f44]">€{total.toFixed(2)}</span>
               </div>
             </div>
           </div>
