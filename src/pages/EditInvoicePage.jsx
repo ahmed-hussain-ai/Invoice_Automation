@@ -85,7 +85,6 @@ export default function EditInvoicePage() {
 
           <div className="mb-8">
             <h3 className="text-sm font-bold text-gray-800 border-b pb-2 mb-4">Payment Details</h3>
-            <InputGroup label="Account Number" field="accountNumber" value={data.accountNumber} onChange={handleChange} />
             <InputGroup label="Account Title" field="accountTitle" value={data.accountTitle} onChange={handleChange} />
             <InputGroup label="Bank Name" field="bankName" value={data.bankName} onChange={handleChange} />
             <InputGroup label="IBAN / Account No" field="iban" value={data.iban} onChange={handleChange} />

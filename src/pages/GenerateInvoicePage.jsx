@@ -62,13 +62,12 @@ const OVERLAYS = {
   //   billCompanyNumber:  { x: 150, y: 388, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
   //   billVat:            { x: 75, y: 409, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
 
-  billClientName: { x: 160, y: 287, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billCompanyName: { x: 160, y: 308, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billAddress: { x: 160, y: 329, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billEmail: { x: 160, y: 349, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billPhone: { x: 160, y: 368, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billCompanyNumber: { x: 160, y: 388, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
-  billVat: { x: 160, y: 409, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billCompanyName: { x: 160, y: 287, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billAddress: { x: 160, y: 308, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billEmail: { x: 160, y: 329, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billPhone: { x: 160, y: 349, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billCompanyNumber: { x: 160, y: 368, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
+  billVat: { x: 160, y: 388, w: 260, fontSize: 13, fontWeight: 500, color: '#1f2937' },
 
   invoiceNo: { x: 620, y: 303, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
   invoiceDate: { x: 620, y: 328, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
@@ -76,7 +75,6 @@ const OVERLAYS = {
   currency: { x: 620, y: 378, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
   paymentTerms: { x: 620, y: 401, w: 170, fontSize: 13, fontWeight: 500, color: '#1f2937' },
 
-  paymentAccountNo: { x: 160, y: 795, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
   paymentAccountTitle: { x: 160, y: 813, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
   paymentBankName: { x: 160, y: 830, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
   paymentIban: { x: 160, y: 848, w: 250, fontSize: 13, fontWeight: 500, color: '#1f2937' },
@@ -211,8 +209,18 @@ const AddItemModal = ({ isOpen, onClose, onAdd, initialItem = null }) => {
 
 export default function GenerateInvoicePage() {
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
-  const [invoice, setInvoice] = useState(DEFAULT_INVOICE);
-  const [items, setItems] = useState([]);
+  const [invoice, setInvoice] = useState(() => {
+    try {
+      const saved = localStorage.getItem('invoice_data');
+      return saved ? JSON.parse(saved) : DEFAULT_INVOICE;
+    } catch { return DEFAULT_INVOICE; }
+  });
+  const [items, setItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('invoice_items');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [devMode, setDevMode] = useState(false);
@@ -247,11 +255,19 @@ export default function GenerateInvoicePage() {
       .then(res => res.json())
       .then(data => {
         if (data.invoiceNo) {
-          setInvoice(prev => ({ ...prev, invoiceNo: data.invoiceNo }));
+          setInvoice(prev => prev.invoiceNo ? prev : { ...prev, invoiceNo: data.invoiceNo });
         }
       })
       .catch(err => console.error('Failed to fetch invoice number', err));
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('invoice_data', JSON.stringify(invoice));
+  }, [invoice]);
+
+  useEffect(() => {
+    localStorage.setItem('invoice_items', JSON.stringify(items));
+  }, [items]);
 
   useEffect(() => {
     const el = previewWrapRef.current;
@@ -349,7 +365,7 @@ export default function GenerateInvoicePage() {
             height: `${CANVAS.H}px`,
             transform: `scale(${scale})`,
             transformOrigin: 'top left',
-            backgroundImage: 'url("/Invoice_template.png")',
+            backgroundImage: 'url("/Invoice_Template_Latest.png")',
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat'
           }}
@@ -361,7 +377,6 @@ export default function GenerateInvoicePage() {
           <AbsText config={OVERLAYS.headerLocation} value={profile.location} devMode={showDevMode} />
 
           {/* Bill To values */}
-          <AbsText config={OVERLAYS.billClientName} value={invoice.clientName} devMode={showDevMode} />
           <AbsText config={OVERLAYS.billCompanyName} value={invoice.companyName} devMode={showDevMode} />
           <AbsText config={OVERLAYS.billAddress} value={invoice.address} devMode={showDevMode} />
           <AbsText config={OVERLAYS.billEmail} value={invoice.clientEmail} devMode={showDevMode} />
@@ -377,7 +392,6 @@ export default function GenerateInvoicePage() {
           <AbsText config={OVERLAYS.paymentTerms} value={invoice.paymentTerms} devMode={showDevMode} />
 
           {/* Payment details from profile */}
-          <AbsText config={OVERLAYS.paymentAccountNo} value={profile.accountNumber} devMode={showDevMode} />
           <AbsText config={OVERLAYS.paymentAccountTitle} value={profile.accountTitle} devMode={showDevMode} />
           <AbsText config={OVERLAYS.paymentBankName} value={profile.bankName} devMode={showDevMode} />
           <AbsText config={OVERLAYS.paymentIban} value={profile.iban} devMode={showDevMode} />
@@ -418,9 +432,9 @@ export default function GenerateInvoicePage() {
 
           {/* Totals */}
 
-          <AbsText config={{ x: 630, y: 707, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={`€${subTotal.toFixed(2)}`} devMode={showDevMode} />
-          <AbsText config={{ x: 630, y: 740, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={discountVal > 0 ? `-€${discountVal.toFixed(2)}` : '€0.00'} devMode={showDevMode} />
-          <AbsText config={{ x: 630, y: 773, w: 100, fontSize: 15, fontWeight: 900, color: '#ffffff', align: 'left' }} value={`€${total.toFixed(2)}`} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 707, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={`€ ${subTotal.toFixed(2)}`} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 740, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={discountVal > 0 ? `-€ ${discountVal.toFixed(2)}` : '€ 0.00'} devMode={showDevMode} />
+          <AbsText config={{ x: 630, y: 773, w: 100, fontSize: 15, fontWeight: 900, color: '#ffffff', align: 'left' }} value={`€ ${total.toFixed(2)}`} devMode={showDevMode} />
           {/* <AbsText config={{ x: 630, y: 712, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={subTotal.toFixed(2)} devMode={showDevMode} />
           <AbsText config={{ x: 630, y: 745, w: 100, fontSize: 16, fontWeight: 500, color: '#1f2937', align: 'left' }} value={discountVal > 0 ? `-${discountVal.toFixed(2)}` : '0.00'} devMode={showDevMode} />
           <AbsText config={{ x: 630, y: 778, w: 100, fontSize: 14, fontWeight: 900, color: '#ffffff', align: 'left' }} value={total.toFixed(2)} devMode={showDevMode} /> */}
@@ -499,7 +513,6 @@ export default function GenerateInvoicePage() {
               <ReadOnlyRow label="Website" value={profile.website} />
               <ReadOnlyRow label="Location" value={profile.location} />
               <div className="border-t border-gray-200 my-2" />
-              <ReadOnlyRow label="Account Number" value={profile.accountNumber} />
               <ReadOnlyRow label="Account Title" value={profile.accountTitle} />
               <ReadOnlyRow label="Bank Name" value={profile.bankName} />
               <ReadOnlyRow label="IBAN / Account No" value={profile.iban} />
@@ -516,7 +529,6 @@ export default function GenerateInvoicePage() {
 
           <div className="mb-8">
             <h3 className="text-sm font-bold text-gray-800 border-b pb-2 mb-4">Bill To</h3>
-            <InputGroup label="Client Name" field="clientName" value={invoice.clientName} onChange={handleChange} />
             <InputGroup label="Company Name" field="companyName" value={invoice.companyName} onChange={handleChange} />
             <InputGroup label="Address" field="address" value={invoice.address} onChange={handleChange} />
             <InputGroup label="Email" field="clientEmail" value={invoice.clientEmail} onChange={handleChange} type="email" />
@@ -621,7 +633,7 @@ export default function GenerateInvoicePage() {
             <div className="mt-4 border-t pt-4">
               <div className="flex justify-end items-center gap-4 text-sm mb-2">
                 <span className="font-semibold text-gray-600">Sub Total:</span>
-                <span className="w-24 text-right font-medium text-gray-800">€{subTotal.toFixed(2)}</span>
+                <span className="w-24 text-right font-medium text-gray-800">€ {subTotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-end items-center gap-4 text-sm mb-2">
                 <span className="font-semibold text-gray-600">Discount (%):</span>
@@ -638,7 +650,7 @@ export default function GenerateInvoicePage() {
               </div>
               <div className="flex justify-end items-center gap-4 text-base font-bold mt-3">
                 <span className="text-[#0a1f44]">Total:</span>
-                <span className="w-24 text-right text-[#0a1f44]">€{total.toFixed(2)}</span>
+                <span className="w-24 text-right text-[#0a1f44]">€ {total.toFixed(2)}</span>
               </div>
             </div>
           </div>
