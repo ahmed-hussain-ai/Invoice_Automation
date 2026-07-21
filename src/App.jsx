@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 // Auth
 import Login from './pages/Login';
+import AutoLogin from './pages/AutoLogin';
 
 // Layout
 import DashboardLayout from './layouts/DashboardLayout';
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         {/* ── Public ── */}
         <Route path="/login" element={<Login />} />
+        <Route path="/auto-login" element={<AutoLogin />} />
 
         {/* ── Protected Dashboard ── */}
         <Route path="/dashboard" element={<DashboardLayout />}>

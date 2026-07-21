@@ -45,6 +45,7 @@ const DEFAULT_INVOICE = {
   paymentTerms: '',
   discount: '',
   notes: '',
+  descriptionStartX: 160,
 };
 
 // Absolute pixel positions for text overlays on the design canvas (794x1123)
@@ -85,16 +86,26 @@ const OVERLAYS = {
   footerNTN: { x: 405, y: 1055, w: 120, fontSize: 15, fontWeight: 700, color: '#1f2937', align: 'center' },
 };
 
-const InputGroup = ({ label, field, value, onChange, type = 'text', placeholder }) => (
+const InputGroup = ({ label, field, value, onChange, type = 'text', placeholder, rows = 3 }) => (
   <div className="mb-4">
     <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
-    <input
-      type={type}
-      value={value ?? ''}
-      placeholder={placeholder}
-      onChange={(e) => onChange(field, e.target.value)}
-      className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-left focus:border-[#0a1f44] focus:outline-none focus:ring-1 focus:ring-[#0a1f44]"
-    />
+    {type === 'textarea' ? (
+      <textarea
+        value={value ?? ''}
+        placeholder={placeholder}
+        rows={rows}
+        onChange={(e) => onChange(field, e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-left focus:border-[#0a1f44] focus:outline-none focus:ring-1 focus:ring-[#0a1f44] resize-none"
+      />
+    ) : (
+      <input
+        type={type}
+        value={value ?? ''}
+        placeholder={placeholder}
+        onChange={(e) => onChange(field, e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-left focus:border-[#0a1f44] focus:outline-none focus:ring-1 focus:ring-[#0a1f44]"
+      />
+    )}
   </div>
 );
 
@@ -179,8 +190,8 @@ const AddItemModal = ({ isOpen, onClose, onAdd, initialItem = null }) => {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-96 shadow-xl">
         <h3 className="text-lg font-bold text-[#0a1f44] mb-4">{initialItem ? 'Edit Item' : 'Add Item'}</h3>
-        <InputGroup label="Description of Service" field="description" value={item.description} onChange={(f, v) => setItem({ ...item, [f]: v })} />
-        <div className="flex gap-4">
+        <InputGroup label="Description of Service" field="description" type="textarea" rows={2} value={item.description} onChange={(f, v) => setItem({ ...item, [f]: v })} />
+        <div className="grid grid-cols-2 gap-4">
           <div className="flex-1">
             <InputGroup label="Qty" field="qty" type="text" value={item.qty} onChange={(f, v) => setItem({ ...item, [f]: v })} />
           </div>
@@ -404,31 +415,50 @@ export default function GenerateInvoicePage() {
 
 
           {/* Invoice Items */}
-          {items.map((item, idx) => {
-            // Adjust the base Y position and spacing if necessary
-            const yPos = 485 + (idx * 30);
-            return (
-              <div key={idx}>
-                <AbsText config={{ x: 40, y: yPos - 2, w: 50, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={idx + 1} devMode={showDevMode} />
-                <AbsText config={{ x: 160, y: yPos - 2, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937' }} value={item.description} devMode={showDevMode} />
-                <AbsText config={{ x: 430, y: yPos - 2, w: 60, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.qty || '-'} devMode={showDevMode} />
-                <AbsText config={{ x: 522, y: yPos - 2, w: 80, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.rate || '-'} devMode={showDevMode} />
-                <AbsText config={{ x: 630, y: yPos - 2, w: 100, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.amount || '-'} devMode={showDevMode} />
+          {(() => {
+            let currentY = 485;
+            let currentItemNumber = 1;
 
-                {/* Horizontal row separator */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: `${Math.round(48 * SCALE.x)}px`,
-                    top: `${Math.round((yPos + 18) * SCALE.y)}px`,
-                    width: `${Math.round(700 * SCALE.x)}px`,
-                    borderBottom: '1px solid #9ca3af',
-                    zIndex: 2,
-                  }}
-                />
-              </div>
-            );
-          })}
+            return items.map((item, idx) => {
+              let numLines = 0;
+              const descLines = (item.description || '').split('\n');
+              descLines.forEach(line => {
+                // Assuming roughly 50 characters per line based on width=320 and fontSize=13
+                numLines += Math.max(1, Math.ceil(line.length / 50));
+              });
+
+              const itemY = currentY;
+              // Align price and qty to the last line by shifting them down
+              const lastLineY = currentY + ((numLines - 1) * 20);
+
+              const renderedItem = (
+                <div key={idx}>
+                  <AbsText config={{ x: 40, y: itemY - 2, w: 50, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={currentItemNumber} devMode={showDevMode} />
+                  <AbsText config={{ x: invoice.descriptionStartX !== undefined ? Number(invoice.descriptionStartX) : 160, y: itemY - 2, w: 320, fontSize: 13, fontWeight: 500, color: '#1f2937', wrap: true, lineHeight: 20 }} value={item.description} devMode={showDevMode} />
+                  <AbsText config={{ x: 430, y: lastLineY - 2, w: 60, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.qty || '-'} devMode={showDevMode} />
+                  <AbsText config={{ x: 522, y: lastLineY - 2, w: 80, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.rate || '-'} devMode={showDevMode} />
+                  <AbsText config={{ x: 630, y: lastLineY - 2, w: 100, fontSize: 13, fontWeight: 500, color: '#1f2937', align: 'center' }} value={item.amount || '-'} devMode={showDevMode} />
+
+                  {/* Horizontal row separator */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${Math.round(48 * SCALE.x)}px`,
+                      top: `${Math.round((lastLineY + 18) * SCALE.y)}px`,
+                      width: `${Math.round(700 * SCALE.x)}px`,
+                      borderBottom: '1px solid #9ca3af',
+                      zIndex: 2,
+                    }}
+                  />
+                </div>
+              );
+
+              currentItemNumber++;
+              currentY = lastLineY + 30; // Move down for the next item
+
+              return renderedItem;
+            });
+          })()}
 
           {/* Totals */}
 
@@ -582,6 +612,10 @@ export default function GenerateInvoicePage() {
                   + Add Row
                 </button>
               )}
+            </div>
+
+            <div className="mb-4">
+              <InputGroup label="Description X Position" field="descriptionStartX" type="number" value={invoice.descriptionStartX !== undefined ? invoice.descriptionStartX : 160} onChange={handleChange} />
             </div>
 
             {items.length === 0 ? (
